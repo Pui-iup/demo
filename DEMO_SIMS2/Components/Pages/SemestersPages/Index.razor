@@ -1,0 +1,46 @@
+﻿@page "/semesters"
+
+@using Microsoft.EntityFrameworkCore
+@using Microsoft.AspNetCore.Components.QuickGrid
+@using BlazorApp3.Models
+@using Microsoft.AspNetCore.Authentication
+@using Microsoft.AspNetCore.Identity
+@inject IDbContextFactory<BlazorApp3.Data.ApplicationDbContext> DbFactory
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<PageTitle>Index</PageTitle>
+
+<h1>Semesters</h1>
+@if(isAdmin)
+{<p>
+    <a href="semesters/create"><i class="fa-solid fa-square-plus"></i>Add Semester</a>
+</p>
+}
+
+<QuickGrid Class="table" Items="DbFactory.CreateDbContext().Semesters">
+    <PropertyColumn Property="semesters => semesters.Name" />
+    <PropertyColumn Property="semesters => semesters.StartDate" />
+    <PropertyColumn Property="semesters => semesters.EndDate" />
+
+    <TemplateColumn Context="semesters">
+        <a href="@($"semesters/edit?id={semesters.Id}")"><i class="fa-solid fa-pen-to-square"></i></a> |
+        <a href="@($"semesters/details?id={semesters.Id}")"><i class="fa-solid fa-circle-info"></i></a> |
+        <a href="@($"semesters/delete?id={semesters.Id}")"><i class="fa-solid fa-trash"></i></a>
+    </TemplateColumn>
+</QuickGrid>
+@code{
+    private bool isStudent;
+    private bool isAdmin;
+    private bool isLecture;
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        // Check if the user is in the "Student" role
+        isStudent = user.Claims.Any(c => c.Type == "Role" && c.Value == "Student");
+        isAdmin = user.Claims.Any(c => c.Type == "Role" && c.Value == "Admin");
+        isLecture = user.Claims.Any(c => c.Type == "Role" && c.Value == "Lecture");
+
+    }
+}
